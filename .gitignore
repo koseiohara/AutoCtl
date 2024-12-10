@@ -2,4 +2,7 @@
 *.mod
 EXE
 *.ctl
+*.swp
+main.f90
+Makefile
 

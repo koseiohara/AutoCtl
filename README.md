@@ -47,7 +47,7 @@ The arguments for `auto_ctl()` are below:
 - options  
   `character(*)` `optional`  
   Options of the binary file, such as `'little_endian'` or `'yrev'`.
-  If this argument is provided, no options will be written.  
+  If this argument is not provided, no options will be written.  
 - xnum  
   `integer(4)`  
   Number of grids in x-direction.  
@@ -83,7 +83,7 @@ The arguments for `auto_ctl()` are below:
 - tstep  
   `character(*)`  
   Temporal resolution.  
-  This argument must be provided in `xmn`, `xhr`, `xdy`, `xmo`, or `xyr` format, where x is any integers, such as `6hr` (Errors will not be returned even if the input does not follow this format).  
+  This argument must be provided in `xmn`, `xhr`, `xdy`, `xmo`, or `xyr` format, where x is any integers, such as `6hr` (Errors will not be returned even if the input does not follow all of these formats).  
 - write\_vars  
   `subroutine`  
   Arguments of this subroutine must follow the [example](#vars_example).
