@@ -28,6 +28,8 @@ module mkctl
         character(256) :: ctlname
         character(256) :: dset
 
+        character(4) :: advance
+
         interface
             subroutine write_vars(unit, znum)
                 integer, intent(in) :: unit
@@ -49,7 +51,9 @@ module mkctl
         write(ctl,'(A)') 'DSET ^' // trim(dset)
         write(ctl,'(A,x,A)') 'TITLE', trim(title)
         if (present(options)) then
-            write(ctl,'(A,x,A,x)') 'OPTIONS', trim(options)
+            if (trim(options) /= '') then
+                write(ctl,'(A,x,A,x)') 'OPTIONS', trim(options)
+            endif
         endif
         write(ctl,'(A)') 'UNDEF 9.999E+20'
         write(ctl,*)
@@ -127,7 +131,12 @@ module mkctl
         end select
 
         !-----ZDEF STATEMENT-----!
-        write(ctl,'(A,x,I0,x,A)') 'ZDEF', znum, 'LEVELS'
+        advance = 'NO'
+        if (znum /= 1) then
+            advance = 'YES'
+        endif
+
+        write(ctl,'(A,x,I0,x,A,x)',ADVANCE=advance) 'ZDEF', znum, 'LEVELS'
         select type(levels)
             type is (integer(4))
                 write(ctl,'(*(I0,:,", "))') levels(1:znum)
@@ -146,7 +155,7 @@ module mkctl
         end select
 
         !-----TDEF STATEMENT-----!
-        write(ctl,'(A,x,I0,x,A,x,A)') 'TDEF', tnum, trim(tini), trim(tstep)
+        write(ctl,'(A,x,I0,x,A,x,A,x,A)') 'TDEF', tnum, 'linear', trim(tini), trim(tstep)
         write(ctl,*)
 
         call write_vars(ctl , &  !! IN
