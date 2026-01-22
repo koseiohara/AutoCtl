@@ -8,13 +8,14 @@ module mkctl
     contains
 
 
-    subroutine auto_ctl(bin, title, options, xnum, xmin, xstep, ynum, ymin, ystep, ylevels, znum, zlevels, tnum, tini, tstep, write_vars)
+    subroutine auto_ctl(bin, title, options, xnum, xmin, xstep, xlevels, ynum, ymin, ystep, ylevels, znum, zlevels, tnum, tini, tstep, write_vars)
         character(*), intent(in) :: bin
         character(*), intent(in) :: title
         character(*), intent(in), optional :: options
         integer     , intent(in) :: xnum
-        class(*)    , intent(in) :: xmin
-        class(*)    , intent(in) :: xstep
+        class(*)    , intent(in), optional :: xmin
+        class(*)    , intent(in), optional :: xstep
+        class(*)    , intent(in), optional :: xlevels(xnum)
         integer     , intent(in) :: ynum
         class(*)    , intent(in), optional :: ymin
         class(*)    , intent(in), optional :: ystep
@@ -60,40 +61,71 @@ module mkctl
         write(ctl,*)
 
         !-----XDEF STATEMENT-----!
-        write(ctl,'(A,x,I0,x,A,x)',ADVANCE='NO') 'XDEF', xnum, 'LINEAR'
-        select type(xmin)
-            type is (integer(4))
-                write(ctl,'(I0,x)',ADVANCE='NO') xmin
-            type is (integer(8))
-                write(ctl,'(I0,x)',ADVANCE='NO') xmin
-            type is (real(4))
-                write(ctl,'(F0.5,x)',ADVANCE='NO') xmin
-            type is (real(8))
-                write(ctl,'(F0.5,x)',ADVANCE='NO') xmin
-            type is (real(16))
-                write(ctl,'(F0.5,x)',ADVANCE='NO') xmin
-            class default
-                write(*,'(A)') 'ERROR STOP'
-                write(*,'(A)') 'Unsupported Data Type : xmin'
-                ERROR STOP
-        end select
+        write(ctl,'(A,x,I0,x,A,x)',ADVANCE='NO') 'XDEF', xnum
+        if (present(xlevels)) then
+            advance = 'NO'
+            if (xnum /= 1) then
+                advance = 'YES'
+            endif
 
-        select type(xstep)
-            type is (integer(4))
-                write(ctl,'(I0)') xstep
-            type is (integer(8))
-                write(ctl,'(I0)') xstep
-            type is (real(4))
-                write(ctl,'(F0.5)') xstep
-            type is (real(8))
-                write(ctl,'(F0.5)') xstep
-            type is (real(16))
-                write(ctl,'(F0.5)') xstep
-            class default
-                write(*,'(A)') 'ERROR STOP'
-                write(*,'(A)') 'Unsupported Data Type : xstep'
-                ERROR STOP
-        end select
+            write(ctl,'(A,x)',ADVANCE=advance) 'LEVELS'
+            select type(xlevels)
+                type is (integer(4))
+                    write(ctl,'(*(I0,:," "))') xlevels(1:xnum)
+                type is (integer(8))
+                    write(ctl,'(*(I0,:," "))') xlevels(1:xnum)
+                type is (real(4))
+                    write(ctl,'(*(F0.3,:," "))') xlevels(1:xnum)
+                type is (real(8))
+                    write(ctl,'(*(F0.3,:," "))') xlevels(1:xnum)
+                type is (real(16))
+                    write(ctl,'(*(F0.3,:," "))') xlevels(1:xnum)
+                class default
+                    write(*,'(A)') 'ERROR STOP'
+                    write(*,'(A)') 'Unsupported Data Type : xlevels'
+                    ERROR STOP
+            end select
+        else if (present(xmin) .AND. present(xstep)) then
+            write(ctl,'(A,x)',ADVANCE='NO') 'LINEAR'
+            select type(xmin)
+                type is (integer(4))
+                    write(ctl,'(I0,x)',ADVANCE='NO') xmin
+                type is (integer(8))
+                    write(ctl,'(I0,x)',ADVANCE='NO') xmin
+                type is (real(4))
+                    write(ctl,'(F0.5,x)',ADVANCE='NO') xmin
+                type is (real(8))
+                    write(ctl,'(F0.5,x)',ADVANCE='NO') xmin
+                type is (real(16))
+                    write(ctl,'(F0.5,x)',ADVANCE='NO') xmin
+                class default
+                    write(*,'(A)') 'ERROR STOP'
+                    write(*,'(A)') 'Unsupported Data Type : xmin'
+                    ERROR STOP
+            end select
+
+            select type(xstep)
+                type is (integer(4))
+                    write(ctl,'(I0)') xstep
+                type is (integer(8))
+                    write(ctl,'(I0)') xstep
+                type is (real(4))
+                    write(ctl,'(F0.5)') xstep
+                type is (real(8))
+                    write(ctl,'(F0.5)') xstep
+                type is (real(16))
+                    write(ctl,'(F0.5)') xstep
+                class default
+                    write(*,'(A)') 'ERROR STOP'
+                    write(*,'(A)') 'Unsupported Data Type : xstep'
+                    ERROR STOP
+            end select
+        else
+            write(*,'(A)') 'ERROR STOP'
+            write(*,'(A)') 'Lack of arguments'
+            write(*,'(A)') 'Both "xmin" and "xstep" are need to be provided, otherwise. need "xlevels"'
+            ERROR STOP
+        endif
 
         !-----YDEF STATEMENT-----!
         write(ctl,'(A,x,I0,x)',ADVANCE='NO') 'YDEF', ynum
@@ -106,15 +138,15 @@ module mkctl
             write(ctl,'(A,x)',ADVANCE=advance) 'LEVELS'
             select type(ylevels)
                 type is (integer(4))
-                    write(ctl,'(*(I0,:,", "))') ylevels(1:znum)
+                    write(ctl,'(*(I0,:," "))') ylevels(1:ynum)
                 type is (integer(8))
-                    write(ctl,'(*(I0,:,", "))') ylevels(1:znum)
+                    write(ctl,'(*(I0,:," "))') ylevels(1:ynum)
                 type is (real(4))
-                    write(ctl,'(*(F0.3,:,", "))') ylevels(1:znum)
+                    write(ctl,'(*(F0.3,:," "))') ylevels(1:ynum)
                 type is (real(8))
-                    write(ctl,'(*(F0.3,:,", "))') ylevels(1:znum)
+                    write(ctl,'(*(F0.3,:," "))') ylevels(1:ynum)
                 type is (real(16))
-                    write(ctl,'(*(F0.3,:,", "))') ylevels(1:znum)
+                    write(ctl,'(*(F0.3,:," "))') ylevels(1:ynum)
                 class default
                     write(*,'(A)') 'ERROR STOP'
                     write(*,'(A)') 'Unsupported Data Type : ylevels'
@@ -171,15 +203,15 @@ module mkctl
         write(ctl,'(A,x,I0,x,A,x)',ADVANCE=advance) 'ZDEF', znum, 'LEVELS'
         select type(zlevels)
             type is (integer(4))
-                write(ctl,'(*(I0,:,", "))') zlevels(1:znum)
+                write(ctl,'(*(I0,:," "))') zlevels(1:znum)
             type is (integer(8))
-                write(ctl,'(*(I0,:,", "))') zlevels(1:znum)
+                write(ctl,'(*(I0,:," "))') zlevels(1:znum)
             type is (real(4))
-                write(ctl,'(*(F0.3,:,", "))') zlevels(1:znum)
+                write(ctl,'(*(F0.3,:," "))') zlevels(1:znum)
             type is (real(8))
-                write(ctl,'(*(F0.3,:,", "))') zlevels(1:znum)
+                write(ctl,'(*(F0.3,:," "))') zlevels(1:znum)
             type is (real(16))
-                write(ctl,'(*(F0.3,:,", "))') zlevels(1:znum)
+                write(ctl,'(*(F0.3,:," "))') zlevels(1:znum)
             class default
                 write(*,'(A)') 'ERROR STOP'
                 write(*,'(A)') 'Unsupported Data Type : zlevels'
